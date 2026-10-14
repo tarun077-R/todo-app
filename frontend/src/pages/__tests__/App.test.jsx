@@ -45,7 +45,7 @@ describe('App / PrivateRoute - auth failure modes', () => {
     renderApp();
 
     // Should show login page with error
-    expect(await screen.findByRole('heading', { name: /sign in/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /welcome back/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /create one/i })).toBeInTheDocument();
     expect(screen.queryByText('Dashboard')).not.toBeInTheDocument();
   });
@@ -58,7 +58,7 @@ describe('App / PrivateRoute - auth failure modes', () => {
     renderApp();
 
     // Should redirect to login, not show Dashboard
-    await screen.findByRole('heading', { name: /sign in/i });
+    await screen.findByRole('heading', { name: /welcome back/i });
     expect(screen.queryByText('Dashboard')).not.toBeInTheDocument();
   });
 
@@ -72,7 +72,7 @@ describe('App / PrivateRoute - auth failure modes', () => {
 
     renderApp();
 
-    await screen.findByRole('heading', { name: /sign in/i });
+    await screen.findByRole('heading', { name: /welcome back/i });
     expect(screen.queryByText('Dashboard')).not.toBeInTheDocument();
   });
 });
@@ -89,7 +89,7 @@ describe('App / PrivateRoute - regression: no infinite spinner', () => {
     renderApp();
 
     // The spinner should disappear (loading finishes) and login should appear
-    await screen.findByRole('heading', { name: /sign in/i });
+    await screen.findByRole('heading', { name: /welcome back/i });
     // After redirect, no spinner should be visible
     expect(screen.queryByTestId('spinner')).not.toBeInTheDocument();
   });
@@ -100,7 +100,7 @@ describe('App / PrivateRoute - regression: no infinite spinner', () => {
 
     renderApp();
 
-    await screen.findByRole('heading', { name: /sign in/i });
+    await screen.findByRole('heading', { name: /welcome back/i });
     expect(screen.queryByTestId('spinner')).not.toBeInTheDocument();
   });
 
@@ -110,7 +110,7 @@ describe('App / PrivateRoute - regression: no infinite spinner', () => {
 
     renderApp();
 
-    await screen.findByRole('heading', { name: /sign in/i });
+    await screen.findByRole('heading', { name: /welcome back/i });
     expect(screen.queryByTestId('spinner')).not.toBeInTheDocument();
   });
 });

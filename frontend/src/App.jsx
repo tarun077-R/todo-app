@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useOutletContext } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -49,7 +49,7 @@ function PrivateRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="app-shell">
+      <div className="auth-shell">
         <div className="loading-state">
           <div className="spinner spinner-large" role="status" aria-label="Loading" />
           <p className="loading-state-text">Loading...</p>
@@ -66,34 +66,44 @@ function PrivateRoute({ children }) {
 }
 
 function DashboardLayout() {
+  // PrivateRoute publishes the authenticated user on the outlet context;
+  // without reading it the sidebar could never show the signed-in account.
+  const { user } = useOutletContext() || {};
+
   return (
-    <>
-      <Sidebar />
+    <div className="app-wrapper">
+      <Sidebar user={user} />
       <main className="main-content">
         <Outlet />
       </main>
-    </>
+    </div>
+  );
+}
+
+/** Route tree without a router, so tests can mount it in a MemoryRouter. */
+export function AppShell() {
+  return (
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route element={<PrivateRoute />}>
+        <Route element={<DashboardLayout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/tasks" element={<TaskList view="active" />} />
+          <Route path="/tasks/completed" element={<TaskList view="completed" />} />
+          <Route path="/tasks/new" element={<TaskForm />} />
+          <Route path="/tasks/:id" element={<TaskDetail />} />
+        </Route>
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 
 export default function App() {
   return (
     <BrowserRouter>
-      <div className="app-wrapper">
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route element={<PrivateRoute />}>
-            <Route element={<DashboardLayout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/tasks" element={<TaskList />} />
-              <Route path="/tasks/new" element={<TaskForm />} />
-              <Route path="/tasks/:id" element={<TaskDetail />} />
-            </Route>
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
+      <AppShell />
     </BrowserRouter>
   );
 }

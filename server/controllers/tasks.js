@@ -1,7 +1,5 @@
+const mongoose = require('mongoose');
 const Task = require('../models/Task');
-
-const TODAY = new Date();
-TODAY.setHours(0, 0, 0, 0);
 
 async function create(req, res) {
   const { title, description, status, priority, dueDate, category } = req.body;
@@ -66,22 +64,41 @@ async function list(req, res) {
     filter.category = String(category).trim();
   }
 
-  const sort = {};
-  if (sortBy === 'dueDate' || sortBy === 'createdAt') {
-    sort[sortBy] = sortDirection === 'desc' ? -1 : 1;
+  const skips = (Number(page) - 1) * Number(limit);
+  const dir = sortDirection === 'desc' ? -1 : 1;
+
+  let tasks;
+  let total;
+
+  if (sortBy === 'priority') {
+    // Priority orders high > medium > low, which is not alphabetical, so it
+    // cannot be expressed as a plain Mongo sort on the string field. Fetch the
+    // matching set (already created newest-first) and rank it in memory; Array
+    // .sort is stable, so equal priorities keep their createdAt-desc order.
+    const rank = { high: 3, medium: 2, low: 1 };
+    const all = await Task.find(filter).sort({ createdAt: -1 });
+    all.sort((a, b) => {
+      const diff = (rank[a.priority] ?? 0) - (rank[b.priority] ?? 0);
+      return dir === -1 ? -diff : diff;
+    });
+    tasks = all.slice(skips, skips + Number(limit));
+    total = all.length;
   } else {
-    sort.createdAt = 1;
+    const sort = {};
+    if (sortBy === 'dueDate' || sortBy === 'createdAt') {
+      sort[sortBy] = dir;
+    } else {
+      sort.createdAt = -1;
+    }
+
+    [tasks, total] = await Promise.all([
+      Task.find(filter)
+        .sort(sort)
+        .skip(skips)
+        .limit(Number(limit)),
+      Task.countDocuments(filter),
+    ]);
   }
-
-  const skips = (page - 1) * limit;
-
-  const [tasks, total] = await Promise.all([
-    Task.find(filter)
-      .sort(sort)
-      .skip(skips)
-      .limit(Number(limit)),
-    Task.countDocuments(filter),
-  ]);
 
   res.json({
     items: tasks.map(sanitize),
@@ -141,7 +158,21 @@ async function update(req, res) {
     updates.priority = priority;
   }
   if (dueDate !== undefined) {
-    updates.dueDate = new Date(dueDate);
+    if (dueDate === null || dueDate === '') {
+      // Clearing the date field must store null, not new Date('') (Invalid Date).
+      updates.dueDate = null;
+    } else {
+      const parsed = new Date(dueDate);
+      if (Number.isNaN(parsed.getTime())) {
+        return res.status(400).json({
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'dueDate must be a valid date',
+          },
+        });
+      }
+      updates.dueDate = parsed;
+    }
   }
   if (category !== undefined) {
     updates.category = category.trim();
@@ -284,8 +315,21 @@ async function sortTasks(req, res) {
 }
 
 async function dashboard(req, res) {
+  // Aggregations never cast types: req.user.id is the hex string from the JWT
+  // while owner is stored as an ObjectId, so match on a casted ObjectId or the
+  // pipeline silently matches zero documents and every stat reads 0.
+  const owner = mongoose.isValidObjectId(req.user.id)
+    ? new mongoose.Types.ObjectId(String(req.user.id))
+    : req.user.id;
+
+  // "Overdue" means the due date is before *today*, not before this instant:
+  // date-only due dates are stored at midnight, so comparing to now() would
+  // mark every task due today as overdue (the UI shows them as "Today").
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
   const stats = await Task.aggregate([
-    { $match: { owner: req.user.id } },
+    { $match: { owner } },
     {
       $group: {
         _id: null,
@@ -298,7 +342,9 @@ async function dashboard(req, res) {
               {
                 $and: [
                   { $eq: ['$status', 'pending'] },
-                  { $lt: ['$dueDate', new Date()] },
+                  { $ne: [{ $type: '$dueDate' }, 'missing'] },
+                  { $ne: ['$dueDate', null] },
+                  { $lt: ['$dueDate', startOfToday] },
                 ],
               },
               1,
@@ -306,28 +352,23 @@ async function dashboard(req, res) {
             ],
           },
         },
-        byPriority: {
-          $push: {
-            k: '$priority',
-            v: { $sum: 1 },
-          },
-        },
+        low: { $sum: { $cond: [{ $eq: ['$priority', 'low'] }, 1, 0] } },
+        medium: { $sum: { $cond: [{ $eq: ['$priority', 'medium'] }, 1, 0] } },
+        high: { $sum: { $cond: [{ $eq: ['$priority', 'high'] }, 1, 0] } },
       },
     },
   ]);
-
-  const byPriority = stats[0]?.byPriority || [];
-  const priorityCounts = {};
-  byPriority.forEach((item) => {
-    priorityCounts[item.k] = item.v;
-  });
 
   res.json({
     total: stats[0]?.total || 0,
     completed: stats[0]?.completed || 0,
     pending: stats[0]?.pending || 0,
     overdue: stats[0]?.overdue || 0,
-    byPriority: priorityCounts,
+    byPriority: {
+      low: stats[0]?.low || 0,
+      medium: stats[0]?.medium || 0,
+      high: stats[0]?.high || 0,
+    },
   });
 }
 

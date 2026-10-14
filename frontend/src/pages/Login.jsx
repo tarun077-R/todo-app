@@ -16,7 +16,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const { token, user } = await authLogin({ email, password });
+      const { token } = await authLogin({ email, password });
       setToken(token);
       const from = location.state?.from?.pathname || '/tasks';
       navigate(from, { replace: true });
@@ -28,46 +28,27 @@ export default function Login() {
   }
 
   return (
-    <div className="app-shell">
-      <div
-        className="card"
-        style={{
-          maxWidth: '420px',
-          margin: 'var(--space-8) auto',
-          padding: 'var(--space-8)',
-        }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
-          <div
-            className="sidebar-brand"
-            style={{
-              justifyContent: 'center',
-              paddingBottom: 0,
-              marginBottom: 'var(--space-4)',
-              borderBottom: 'none',
-            }}
-          >
-            <div className="sidebar-brand-icon">T</div>
-            <span className="sidebar-brand-text">TaskFlow</span>
-          </div>
-          <h1
-            style={{
-              fontSize: 'var(--font-size-2xl)',
-              fontWeight: 'var(--font-weight-bold)',
-              marginBottom: 'var(--space-2)',
-            }}
-          >
-            Welcome back
-          </h1>
-          <p className="text-secondary">
-            Sign in to continue to your tasks.
-          </p>
+    <div className="auth-shell">
+      <div className="auth-card">
+        <div className="auth-brand">
+          <div className="sidebar-brand-icon" aria-hidden="true">T</div>
+          <span className="sidebar-brand-text">TaskFlow</span>
+        </div>
+
+        <div className="auth-heading">
+          <h1>Welcome back</h1>
+          <p className="text-secondary">Sign in to continue to your tasks.</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           {error && (
-            <div className="error-state" style={{ marginBottom: 'var(--space-4)', padding: 'var(--space-4)' }}>
-              <p className="error" role="alert">{error}</p>
+            <div className="inline-alert" role="alert">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span className="inline-alert-text">{error}</span>
             </div>
           )}
 
@@ -100,14 +81,13 @@ export default function Login() {
 
           <button
             type="submit"
-            className="btn btn-primary btn-lg"
+            className="btn btn-primary btn-block"
             disabled={loading}
-            style={{ width: '100%', marginTop: 'var(--space-4)' }}
           >
             {loading ? (
               <>
-                <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
-                Signing in...
+                <span className="spinner spinner-inline" aria-hidden="true" />
+                Signing in…
               </>
             ) : (
               'Sign in'
@@ -115,7 +95,7 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="hint" style={{ textAlign: 'center', marginTop: 'var(--space-6)' }}>
+        <div className="hint">
           No account?{' '}
           <Link to={location.state?.from?.pathname || '/register'}>Create one</Link>
         </div>

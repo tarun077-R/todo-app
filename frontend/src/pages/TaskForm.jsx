@@ -41,26 +41,34 @@ export default function TaskForm() {
 
   return (
     <div className="app-shell">
-      <div className="page-header">
+      <header className="page-header">
         <div>
-          <h1>Create New Task</h1>
-          <p className="text-secondary" style={{ marginTop: 'var(--space-1)' }}>
-            Add a new task to your list.
+          <p className="page-eyebrow">
+            <Link to="/tasks">My Tasks</Link>
+            <span aria-hidden="true"> / </span>
+            New
+          </p>
+          <h1>Create task</h1>
+          <p className="page-header-subtitle">
+            Capture a task with its priority, due date, and category.
           </p>
         </div>
-        <Link to="/tasks" className="btn btn-ghost">
-          <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-          Cancel
-        </Link>
-      </div>
+        <div className="page-header-actions">
+          <Link to="/tasks" className="btn">
+            Cancel
+          </Link>
+        </div>
+      </header>
 
-      <div className="card form-card" style={{ maxWidth: '640px' }}>
+      <div className="card form-card">
         {error && (
-          <div className="error-state" style={{ marginBottom: 'var(--space-4)' }}>
-            <p className="error" role="alert">{error}</p>
+          <div className="inline-alert" role="alert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span className="inline-alert-text">{error}</span>
           </div>
         )}
 
@@ -85,11 +93,11 @@ export default function TaskForm() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
-              placeholder="Add optional details..."
+              placeholder="Add optional details…"
             />
           </div>
 
-          <div className="grid two-column" style={{ marginTop: 'var(--space-4)' }}>
+          <div className="grid two-column">
             <div className="form-field">
               <label htmlFor="task-priority">Priority</label>
               <select
@@ -114,7 +122,7 @@ export default function TaskForm() {
             </div>
           </div>
 
-          <div className="form-field" style={{ marginTop: 'var(--space-4)' }}>
+          <div className="form-field">
             <label htmlFor="task-category">Category (optional)</label>
             <input
               id="task-category"
@@ -125,25 +133,19 @@ export default function TaskForm() {
             />
           </div>
 
-          <div className="form-actions" style={{ marginTop: 'var(--space-6)' }}>
+          <div className="form-actions">
             <button
               type="submit"
-              className="btn btn-primary btn-lg"
+              className="btn btn-primary"
               disabled={saving}
             >
               {saving ? (
                 <>
-                  <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
-                  Creating...
+                  <span className="spinner spinner-inline" aria-hidden="true" />
+                  Creating…
                 </>
               ) : (
-                <>
-                  <svg className="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  Create Task
-                </>
+                'Create Task'
               )}
             </button>
           </div>

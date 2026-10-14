@@ -6,6 +6,7 @@ import Dashboard from '../Dashboard';
 
 vi.mock('../../api/client', () => ({
   dashboard: vi.fn(),
+  taskList: vi.fn(() => Promise.resolve({ items: [], pagination: { total: 0 } })),
 }));
 
 beforeEach(() => {

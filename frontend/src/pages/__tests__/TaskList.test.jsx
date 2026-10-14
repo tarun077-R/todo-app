@@ -177,7 +177,7 @@ describe('TaskList', () => {
     expect(screen.getByText('medium')).toBeInTheDocument();
   });
 
-  it('renders a completed task with a restore action', async () => {
+  it('renders a completed task with a restore checkbox', async () => {
     taskList.mockResolvedValue({
       items: [
         {
@@ -194,12 +194,60 @@ describe('TaskList', () => {
     renderList();
 
     expect(await screen.findByText('Old chore')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /restore/i })).toBeInTheDocument();
+    // In new design, restore is handled via checkbox
+    expect(screen.getByRole('checkbox', { name: /mark as incomplete/i })).toBeInTheDocument();
+  });
+
+  it('renders task cards in the new card layout', async () => {
+    taskList.mockResolvedValue({
+      items: [
+        {
+          _id: 't1',
+          title: 'Buy milk',
+          status: 'pending',
+          priority: 'medium',
+          dueDate: '2026-10-20T00:00:00Z',
+          category: 'Shopping',
+        },
+      ],
+      overdue: [],
+    });
+
+    renderList();
+
+    // Wait for task card to appear
+    const taskCard = await screen.findByText('Buy milk');
+    expect(taskCard).toBeInTheDocument();
+    
+    // Check for task card elements
+    expect(screen.getByText('Shopping')).toBeInTheDocument();
+    expect(screen.getByText('medium')).toBeInTheDocument();
+  });
+
+  it('shows error state with retry button when API fails', async () => {
+    taskList.mockRejectedValue({ data: { error: { message: 'Server error' } } });
+
+    renderList();
+
+    const errorAlert = await screen.findByRole('alert');
+    expect(errorAlert).toHaveTextContent('Server error');
+    expect(screen.getByText('Try again')).toBeInTheDocument();
+  });
+
+  it('shows empty state message based on filters', async () => {
+    renderList();
+    
+    // Set a filter to trigger filtered empty state
+    fireEvent.change(screen.getByLabelText('Filter by status'), {
+      target: { value: 'completed' },
+    });
+
+    await screen.findByText(/try adjusting your filters/i);
   });
 
   it('sends filter and sort params to the API', async () => {
     renderList();
-    await screen.findByText(/no tasks yet/i);
+    await screen.findByText(/no tasks found/i);
 
     fireEvent.change(screen.getByLabelText('Filter by status'), {
       target: { value: 'completed' },
@@ -235,7 +283,7 @@ describe('TaskList', () => {
 
     renderList();
 
-    await screen.findByText(/no tasks yet/i);
+    await screen.findByText(/no tasks found/i);
     // overview buckets still exposed even with an empty task list
     expect(taskList).toHaveBeenCalled();
   });

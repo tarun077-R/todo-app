@@ -17,7 +17,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const { token, user } = await authRegister({ name, email, password });
+      const { token } = await authRegister({ name, email, password });
       setToken(token);
       const from = location.state?.from?.pathname || '/tasks';
       navigate(from, { replace: true });
@@ -29,46 +29,27 @@ export default function Register() {
   }
 
   return (
-    <div className="app-shell">
-      <div
-        className="card"
-        style={{
-          maxWidth: '420px',
-          margin: 'var(--space-8) auto',
-          padding: 'var(--space-8)',
-        }}
-      >
-        <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
-          <div
-            className="sidebar-brand"
-            style={{
-              justifyContent: 'center',
-              paddingBottom: 0,
-              marginBottom: 'var(--space-4)',
-              borderBottom: 'none',
-            }}
-          >
-            <div className="sidebar-brand-icon">T</div>
-            <span className="sidebar-brand-text">TaskFlow</span>
-          </div>
-          <h1
-            style={{
-              fontSize: 'var(--font-size-2xl)',
-              fontWeight: 'var(--font-weight-bold)',
-              marginBottom: 'var(--space-2)',
-            }}
-          >
-            Create your account
-          </h1>
-          <p className="text-secondary">
-            Get started with your personal task manager.
-          </p>
+    <div className="auth-shell">
+      <div className="auth-card">
+        <div className="auth-brand">
+          <div className="sidebar-brand-icon" aria-hidden="true">T</div>
+          <span className="sidebar-brand-text">TaskFlow</span>
+        </div>
+
+        <div className="auth-heading">
+          <h1>Create your account</h1>
+          <p className="text-secondary">Get started with your personal task manager.</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           {error && (
-            <div className="error-state" style={{ marginBottom: 'var(--space-4)', padding: 'var(--space-4)' }}>
-              <p className="error" role="alert">{error}</p>
+            <div className="inline-alert" role="alert">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <span className="inline-alert-text">{error}</span>
             </div>
           )}
 
@@ -115,14 +96,13 @@ export default function Register() {
 
           <button
             type="submit"
-            className="btn btn-primary btn-lg"
+            className="btn btn-primary btn-block"
             disabled={loading}
-            style={{ width: '100%', marginTop: 'var(--space-4)' }}
           >
             {loading ? (
               <>
-                <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }} />
-                Creating account...
+                <span className="spinner spinner-inline" aria-hidden="true" />
+                Creating account…
               </>
             ) : (
               'Create account'
@@ -130,7 +110,7 @@ export default function Register() {
           </button>
         </form>
 
-        <div className="hint" style={{ textAlign: 'center', marginTop: 'var(--space-6)' }}>
+        <div className="hint">
           Already have an account?{' '}
           <Link to={location.state?.from?.pathname || '/login'}>Sign in</Link>
         </div>
