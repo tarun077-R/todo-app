@@ -22,3 +22,8 @@ aidlc/spaces/*/intents/*/runtime-graph.json
 aidlc/spaces/*/intents/*/.aidlc-*
 aidlc/diagnostics/
 # END AI-DLC:gitignore
+.env
+.env.*
+!.env.example
+node_modules/
+dist/

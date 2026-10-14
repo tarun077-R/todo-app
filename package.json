@@ -1,0 +1,28 @@
+{
+  "name": "todo-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack React + Vite + plain CSS todo app with Node.js/Express + MongoDB/Mongoose",
+  "scripts": {
+    "dev:server": "node server/server.js",
+    "dev": "npm-run-all --parallel dev:server watch",
+    "build": "npm run build -w frontend",
+    "test:backend": "cd server && npm test",
+    "test:frontend": "cd frontend && npm test",
+    "test": "npm run test:backend && npm run test:frontend",
+    "install:all": "npm install && npm install --prefix frontend"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "todo",
+    "react",
+    "vite",
+    "node",
+    "express",
+    "mongodb",
+    "mongoose"
+  ],
+  "license": "MIT"
+}
